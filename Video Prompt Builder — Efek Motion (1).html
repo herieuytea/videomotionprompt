@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Video Prompt Builder — Efek Motion</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF2F1;--panel:#FFFFFF;--ink:#1F2829;--mute:#5B6B6C;--line:#C9D6D4;--teal:#0F7C7A;--teal-ink:#FFFFFF;--gold:#B8892B;--char:#243032;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#182022;--panel:#222D30;--ink:#E8EFEE;--mute:#93A5A6;--line:#354447;--teal:#2BB5B0;--teal-ink:#10191A;--gold:#E0B04E;--char:#0F1517}}
+:root[data-theme="dark"]{--bg:#182022;--panel:#222D30;--ink:#E8EFEE;--mute:#93A5A6;--line:#354447;--teal:#2BB5B0;--teal-ink:#10191A;--gold:#E0B04E;--char:#0F1517}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "DM Sans",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+header{padding:18px 0 12px;border-bottom:2px solid var(--gold);margin-bottom:20px}
+h1{font:700 clamp(1.7rem,6vw,2.4rem)/1.1 "Fraunces",Georgia,serif;margin:0 0 6px;letter-spacing:-.01em}
+header p{margin:0;color:var(--mute);max-width:56ch}
+.by{display:block;margin-top:8px;font:500 .9rem "Fraunces",Georgia,serif;font-style:italic;color:var(--gold)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{font:700 1.15rem "Fraunces",Georgia,serif;margin:0 0 4px}
+.hint{margin:0 0 12px;color:var(--mute);font-size:.88rem}
+label{display:block;font-weight:500;font-size:.9rem;margin:12px 0 6px}
+textarea,select,input{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font:inherit}
+textarea{min-height:76px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips,.seg,.presets{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:8px 12px;border-radius:999px;font:inherit;font-size:.88rem;cursor:pointer;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--teal);color:var(--teal-ink);border-color:var(--teal)}
+.chip:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.preset{background:var(--bg);color:var(--ink);border:2px solid var(--teal);border-radius:6px;padding:10px 16px;font:700 .9rem "DM Sans",sans-serif;cursor:pointer;min-height:44px}
+.preset[aria-pressed="true"]{background:var(--teal);color:var(--teal-ink)}
+#pstat{margin:10px 0 0;min-height:1.3em;color:var(--gold);font-weight:500}
+.count{font-weight:700;color:var(--gold)}
+.out{position:sticky;bottom:0;background:var(--char);color:#E8EFEE;border-radius:10px;padding:14px;border-top:3px solid var(--gold);margin-top:8px}
+.out h2{color:#fff}
+#result{white-space:pre-wrap;font-size:.88rem;line-height:1.5;max-height:32vh;overflow-y:auto;margin:8px 0 12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns button{border:0;border-radius:6px;padding:11px 16px;font:700 .9rem "DM Sans",sans-serif;cursor:pointer;min-height:44px}
+#copy{background:var(--gold);color:#1F2829}
+#reset{background:transparent;color:#E8EFEE;border:1px solid #5B6B6C}
+.tabs{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+.tab{background:transparent;color:#E8EFEE;border:1px solid #5B6B6C;border-radius:999px;padding:8px 14px;font:500 .85rem "DM Sans",sans-serif;cursor:pointer;min-height:40px}
+.tab[aria-pressed="true"]{background:var(--gold);color:#1F2829;border-color:var(--gold)}
+#cc{font-size:.8rem;color:var(--gold);font-weight:700}
+.pick{display:none}
+.trigger{display:block;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:11px 12px;font:inherit;cursor:pointer;min-height:44px}
+#fxbtn{background:var(--teal);color:var(--teal-ink);border-color:var(--teal);font-weight:700;text-align:center;margin-bottom:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);width:100%;max-width:760px;max-height:85vh;overflow-y:auto;border-radius:14px 14px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));border-top:3px solid var(--gold);outline:none}
+.mh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.badge{background:var(--gold);color:#1F2829;border-radius:999px;padding:4px 12px;font-weight:700;font-size:.8rem;white-space:nowrap}
+.mf{position:sticky;bottom:0;padding-top:12px;background:var(--panel)}
+#mdone{width:100%;background:var(--teal);color:var(--teal-ink);border:0;border-radius:6px;padding:12px;font:700 1rem "DM Sans",sans-serif;min-height:46px;cursor:pointer}
+@media (max-width:480px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Video Prompt Builder</h1>
+<p>Susun prompt video AI dengan efek motion dan animasi bergaya editing profesional. Hasilnya bebas teks dan tipografi.</p>
+<span class="by">by heri_euy</span>
+</header>
+
+<section>
+<h2>Preset cepat</h2>
+<p class="hint">Mulai dari kombinasi siap pakai, lalu ubah sesukamu.</p>
+<button type="button" class="trigger" id="prbtn">Pilih preset</button>
+<p class="hint" id="pstat" aria-live="polite"></p>
+</section>
+
+<section>
+<h2>Subjek dan adegan</h2>
+<label for="subject">Apa yang tampil di video?</label>
+<textarea id="subject" placeholder="Contoh: botol minuman buah segar dengan percikan air dan potongan jeruk di meja kayu"></textarea>
+<div class="row">
+<div><label for="type">Jenis video</label>
+<select id="type" class="pick" data-title="Jenis video"><option>product advertisement</option><option>food and beverage commercial</option><option>fashion lookbook</option><option>small business promo</option><option>travel highlight reel</option><option>social media reel</option><option>brand intro</option></select></div>
+<div><label for="style">Gaya visual</label>
+<select id="style" class="pick" data-title="Gaya visual"><option>clean modern commercial</option><option>cinematic premium</option><option>vibrant colorful pop</option><option>minimal elegant</option><option>retro film aesthetic</option><option>futuristic neon</option></select></div>
+</div>
+</section>
+
+<section>
+<h2>Efek motion dan animasi</h2>
+<p class="hint">Pilih banyak (multi): boleh lebih dari satu, tapi beberapa saja agar hasil tidak berantakan. Dipilih: <span class="count" id="cnt">0</span></p>
+<button type="button" class="trigger" id="fxbtn"></button>
+<div class="chips" id="fxsum"></div>
+</section>
+
+<section>
+<h2>Ritme dan format</h2>
+<p class="hint">Semua pilihan di sini pilih satu (single). Ketuk kolom untuk membuka popup.</p>
+<label>Tempo</label>
+<select id="tempo" class="pick" data-title="Tempo"><option>Lambat sinematik</option><option selected>Sedang</option><option>Cepat energik</option></select>
+<label>Kekuatan efek</label>
+<select id="power" class="pick" data-title="Kekuatan efek"><option>Halus</option><option selected>Sedang</option><option>Kuat</option></select>
+<div class="row">
+<div><label for="ratio">Rasio</label><select id="ratio" class="pick" data-title="Rasio"><option>9:16 vertical</option><option>16:9 horizontal</option><option>1:1 square</option><option>4:5 portrait</option></select></div>
+<div><label for="dur">Durasi (detik)</label><input id="dur" type="number" min="1" max="60" step="1" value="5" inputmode="numeric"></div>
+</div>
+</section>
+
+<div class="out">
+<h2>Prompt siap pakai</h2>
+<div class="tabs"><button type="button" class="tab" id="tfull" aria-pressed="true">Lengkap</button><button type="button" class="tab" id="tshort" aria-pressed="false">Singkat (maks. 900 huruf)</button></div>
+<div id="cc"></div>
+<div id="result" aria-live="polite"></div>
+<div class="btns"><button id="copy" type="button">Salin prompt</button><button id="reset" type="button">Kosongkan pilihan</button></div>
+</div>
+</div>
+
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt" tabindex="-1"><div class="mh"><h2 id="mt"></h2><span class="badge" id="mmode"></span></div><p class="hint" id="minfo"></p><div id="mbody"></div><div class="mf" id="mf"><button type="button" id="mdone">Selesai</button></div></div></div>
+<script>
+const G=[
+["Transisi",[
+["whip","Whip pan","fast whip pan transition with directional motion blur"],
+["spin","Spin","rotational spin transition between shots"],
+["slide","Slide / push","clean slide-and-push transition where the next shot pushes the previous one off frame"],
+["shape","Shape wipe","geometric shape wipe reveal that opens onto the next scene"],
+["lumaf","Luma fade","soft luminance fade dissolve"],
+["flash","Flash cut","white flash cut synced to the beat"],
+["zoomt","Zoom blur transition","radial zoom-blur transition that rushes into the next shot"],
+["ripple","Ripple air","water ripple distortion transition"],
+["cube","3D cube flip","3D cube rotation transition flipping to the next shot"],
+["peel","Page peel","page-peel transition curling away to reveal the next shot"],
+["shatter","Glass shatter","glass shatter transition where the frame breaks into shards revealing the next scene"],
+["mask","Object mask wipe","foreground object passing across the lens to wipe into the next scene"],
+["roll","Film roll","vertical film-strip roll transition"],
+["pixel","Pixelate","pixelate and mosaic dissolve transition"],
+["liquid","Liquid morph","liquid morph transition where shapes melt into the next shot"],
+["sweep","Light sweep","bright light sweep transition across the frame"]]],
+["Kamera dan zoom",[
+["punch","Zoom punch-in","rapid punch-in zoom on the key moment"],
+["dolly","Dolly zoom","smooth dolly-zoom for dramatic depth"],
+["parallax","Parallax 3D","3D depth parallax with foreground and background layers moving at different speeds"],
+["shake","Handheld shake","subtle energetic handheld camera shake"],
+["orbit","Orbit","smooth 360-degree orbit around the subject"],
+["kenburns","Slow push-in","slow cinematic push-in with gentle drift"],
+["zout","Zoom-out reveal","fast zoom-out that reveals the wider scene"],
+["crash","Crash zoom","sudden crash zoom with a small camera jolt"],
+["barrel","Barrel roll","full barrel-roll camera rotation"],
+["dutch","Tilt / dutch angle","playful tilted dutch-angle camera sway"],
+["fish","Fisheye lens","wide fisheye lens distortion with a close-up feel"]]],
+["Ritme waktu",[
+["ramp","Speed ramp","speed ramp from slow motion to fast forward"],
+["vel","Velocity edit","velocity edit with sharp slow-fast-slow timing"],
+["freeze","Freeze frame","freeze frame with a quick pop and release"],
+["stutter","Stutter / strobe","short stutter and strobe repeat on the beat"],
+["rev","Reverse","reverse playback moment"],
+["beat","Beat pulse","rhythmic scale pulse that hits on every beat"],
+["echo","Echo trail","echo trail where delayed copies of the motion follow the subject"],
+["bullet","Bullet time","bullet-time effect, near-frozen action while the camera moves around"],
+["jump","Jump cut","rhythmic jump cuts with tight timing"]]],
+["Efek visual",[
+["glitch","Glitch / RGB split","digital glitch with RGB channel split and chromatic aberration"],
+["glow","Glow dan bloom","soft glow and highlight bloom"],
+["leak","Light leak","warm film light leaks and lens flares sweeping across the frame"],
+["grain","Film grain","fine film grain with vintage color grade"],
+["mirror","Mirror / kaleidoscope","mirrored kaleidoscope repetition"],
+["colorpop","Color pop","selective color pop against a desaturated background"],
+["blurbk","Bokeh blur","bokeh blur pulling in and out of focus"],
+["vhs","VHS retro","VHS camcorder look with tracking distortion and soft color bleed"],
+["crt","CRT scanlines","old CRT screen look with scanlines and slight curvature"],
+["duo","Duotone","bold two-color duotone grade"],
+["dbl","Double exposure","double exposure blending two images into one silhouette"],
+["half","Halftone","halftone dot pattern pop-art texture"],
+["neon","Neon outline","glowing neon outline tracing the subject"],
+["rays","Light rays","soft volumetric god rays streaming through the frame"],
+["dream","Dreamy soft focus","dreamy soft-focus haze with a gentle glow"],
+["burn","Film burn","orange film burn flashes between shots"],
+["zblur","Radial blur","radial zoom blur streaking outward from the center"],
+["hue","Color shift","rainbow hue shift cycling across the frame"],
+["weather","Salju / hujan","falling snow or rain overlay adding atmosphere"]]],
+["Animasi objek",[
+["bounce","Bounce scale-in","subject enters with a bouncy overshoot scale-in"],
+["float","Objek melayang","ingredients and props floating weightlessly around the subject"],
+["particles","Partikel dan sparkle","sparkles, particles and confetti bursting around the subject"],
+["splash","Percikan cairan","dynamic liquid splash in slow motion"],
+["split","Split screen","animated split-screen panels sliding into place"],
+["stick","Sticker pop","playful abstract cut-out shapes popping in and out, purely decorative graphics"],
+["outline","Sticker outline","white cut-out sticker outline with a drop shadow around the subject"],
+["clone","Clone trail","multiplied clones of the subject fanning out in a trail"],
+["polaroid","Polaroid collage","photo-frame collage where framed shots drop in and stack"],
+["tear","Paper tear reveal","torn paper edge revealing the scene underneath"],
+["assemble","Potongan menyatu","pieces flying in and assembling into the subject"],
+["wave","Wave distortion","wavy liquid distortion rippling through the subject"],
+["carousel","Carousel","items rotating around in a carousel loop"],
+["elastic","Elastic stretch","squash and stretch elastic motion on the subject"],
+["cartoon","Cartoon outline","hand-drawn cartoon outline and flat colour look that animates in"]]]];
+const PRE={"Viral energik":[["whip","punch","ramp","glitch","flash","particles","shake"],2,2],"Elegan premium":[["kenburns","glow","leak","lumaf","blurbk","parallax"],0,0],"Fresh produk":[["bounce","float","splash","colorpop","spin","glow"],1,2],
+"Luxury cinematic":[["kenburns","leak","dream","rays","blurbk","lumaf"],0,0],
+"Editorial fashion":[["jump","beat","duo","zblur","mask","grain"],1,1],
+"Noir minimalis":[["kenburns","grain","duo","lumaf"],0,0],
+"Showcase produk 3D":[["orbit","parallax","glow","rays","float","blurbk"],1,1],
+"Neon futuristik":[["glitch","neon","crt","zoomt","hue","crash"],2,2],
+"Retro nostalgia":[["vhs","grain","burn","polaroid","leak","jump"],1,1],
+"Pop playful":[["bounce","stick","outline","elastic","cartoon","particles"],2,2]};
+const TEMPO=[["Lambat sinematik","slow, cinematic and smooth"],["Sedang","medium, balanced and rhythmic"],["Cepat energik","fast, energetic and beat-driven"]];
+const POWER=[["Halus","subtle"],["Sedang","moderate"],["Kuat","bold and pronounced"]];
+const sel=new Set();let mode="full";
+const $=id=>document.getElementById(id);
+const E={};G.forEach(g=>g[1].forEach(e=>E[e[0]]=e));
+const M=$("modal");let lastF;
+function closeM(){M.hidden=true;document.body.style.overflow="";if(lastF)lastF.focus()}
+function openM(title,multi,build){lastF=document.activeElement;$("mt").textContent=title;$("mmode").textContent=multi?"Pilih banyak":"Pilih satu";$("minfo").textContent=multi?"Ketuk beberapa efek untuk memilih atau membatalkan, lalu tekan Selesai.":"Ketuk satu pilihan. Jendela menutup otomatis.";$("mbody").replaceChildren();build($("mbody"));$("mf").hidden=!multi;M.hidden=false;document.body.style.overflow="hidden";M.querySelector(".sheet").focus()}
+M.onclick=e=>{if(e.target===M)closeM()};$("mdone").onclick=closeM;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!M.hidden)closeM()});
+$("fxbtn").onclick=()=>openM("Efek motion dan animasi",true,b=>{G.forEach(g=>{const h=document.createElement("label");h.textContent=g[0];b.appendChild(h);const d=document.createElement("div");d.className="chips";g[1].forEach(e=>{const c=document.createElement("button");c.type="button";c.className="chip";c.dataset.id=e[0];c.textContent=e[1];c.setAttribute("aria-pressed",sel.has(e[0]));c.onclick=()=>{sel.has(e[0])?sel.delete(e[0]):sel.add(e[0]);render()};d.appendChild(c)});b.appendChild(d)})});
+document.querySelectorAll("select.pick").forEach(s=>{const t=document.createElement("button");t.type="button";t.className="trigger trig";t._sel=s;t.onclick=()=>openM(s.dataset.title,false,b=>{const d=document.createElement("div");d.className="chips";[...s.options].forEach((o,i)=>{const c=document.createElement("button");c.type="button";c.className="chip";c.setAttribute("aria-pressed",i===s.selectedIndex);c.textContent=o.text;c.onclick=()=>{s.selectedIndex=i;render();closeM()};d.appendChild(c)});b.appendChild(d)});s.before(t)});
+$("tfull").onclick=()=>{mode="full";render()};$("tshort").onclick=()=>{mode="short";render()};
+let curP="";
+$("prbtn").onclick=()=>openM("Preset cepat",false,b=>{const d=document.createElement("div");d.className="chips";Object.keys(PRE).forEach(k=>{const c=document.createElement("button");c.type="button";c.className="chip";c.setAttribute("aria-pressed",k===curP);c.textContent=k;c.onclick=()=>{sel.clear();PRE[k][0].forEach(i=>sel.add(i));$("tempo").selectedIndex=PRE[k][1];$("power").selectedIndex=PRE[k][2];render();$("pstat").textContent=k+" diterapkan: "+sel.size+" efek dipilih. Cek bagian efek dan prompt di bawah.";closeM()};d.appendChild(c)});b.appendChild(d)});
+["subject","type","style","ratio","dur"].forEach(i=>$(i).addEventListener("input",render));
+$("reset").onclick=()=>{sel.clear();$("subject").value="";render()};
+$("copy").onclick=async()=>{const t=$("result").textContent;let m="Tersalin";try{await navigator.clipboard.writeText(t)}catch(e){const r=document.createRange();r.selectNodeContents($("result"));const s=getSelection();s.removeAllRanges();s.addRange(r);m="Teks terpilih, salin manual"}
+$("copy").textContent=m;setTimeout(()=>$("copy").textContent="Salin prompt",1800)};
+function render(){
+document.querySelectorAll("#modal .chip[data-id]").forEach(b=>b.setAttribute("aria-pressed",sel.has(b.dataset.id)));
+$("fxbtn").textContent=sel.size?"Ubah efek ("+sel.size+" dipilih)":"Pilih efek (multi)";
+$("fxsum").replaceChildren(...[...sel].map(k=>{const s=document.createElement("button");s.type="button";s.className="chip";s.setAttribute("aria-pressed","true");s.textContent=E[k][1]+" ×";s.onclick=()=>{sel.delete(k);render()};return s}));
+document.querySelectorAll(".trig").forEach(t=>t.textContent=t._sel.options[t._sel.selectedIndex].text+" (pilih satu)");
+const tempo=$("tempo").selectedIndex,power=$("power").selectedIndex;
+const ap=Object.keys(PRE).find(k=>{const p=PRE[k];return p[0].length===sel.size&&p[0].every(x=>sel.has(x))&&p[1]===tempo&&p[2]===power});curP=ap||"";$("prbtn").textContent=(ap||"Pilih preset")+" (pilih satu)";
+$("cnt").textContent=sel.size;
+const sub=$("subject").value.trim()||"[describe your subject and scene]";
+const fx=[...sel].map(k=>E[k][2]);
+const fxText=fx.length?fx.map((f,i)=>(i+1)+". "+f).join("\n"):"(no effects selected)";
+const full=`A ${Math.max(1,parseInt($("dur").value)||5)}-second ${$("type").value} video, ${$("ratio").value} frame. Subject: ${sub}.
+
+Visual style: ${$("style").value}, polished professional commercial look, rich color grading, crisp lighting, clean composition.
+
+Pacing: ${TEMPO[tempo][1]}. Effect intensity: ${POWER[power][1]}.
+
+Motion and editing effects, applied in sequence:
+${fxText}
+
+Effects are smooth, perfectly timed and seamless, like a skillfully edited social video. Fluid 60fps motion, no jitter, consistent subject appearance across all cuts.
+
+Negative prompt: text, typography, letters, words, numbers, captions, subtitles, titles, watermark, logo, UI elements, distorted shapes, flicker, low quality, blurry.`;
+const dn=Math.max(1,parseInt($("dur").value)||5),tx=TEMPO[tempo][1].split(",")[0],px=POWER[power][1].split(" ")[0];
+const mk=n=>{const f=fx.length?fx.map(x=>x.split(" ").slice(0,n).join(" ")).join("; "):"none";return `${dn}-second ${$("type").value}, ${$("ratio").value} frame. ${sub}. Style: ${$("style").value}, polished professional commercial look, rich color grading. Pacing: ${tx}; effect intensity: ${px}. Effects in sequence: ${f}. Smooth, seamless 60fps motion, consistent subject across cuts. No text, typography, letters, captions, subtitles, watermark, logo.`};
+let short="";for(const n of [99,7,5,3]){short=mk(n);if(short.length<=900)break}
+if(short.length>900)short=short.slice(0,897)+"...";
+const t=mode==="short"?short:full;
+$("result").textContent=t;$("cc").textContent=t.length+(mode==="short"?" / 900 huruf":" huruf");
+$("tfull").setAttribute("aria-pressed",mode==="full");$("tshort").setAttribute("aria-pressed",mode==="short");
+}
+render();
+</script>
+</body>
+</html>
